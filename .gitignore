@@ -19,3 +19,7 @@ vendor/
 
 # Go workspace file
 # go.work
+
+project/db-data/
+
+project/.env
