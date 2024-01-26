@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/rpc"
 )
 
 type jsonResponse struct {
@@ -34,8 +35,10 @@ type LogPayload struct {
 }
 
 const (
-	authServiceURL = "http://auth-service/authenticate"
-	logServiceURL  = "http://log-service/log"
+	authServiceURL   = "http://auth-service/authenticate"
+	logServiceURL    = "http://log-service/log"
+	logServiceRPCURL = "log-service:5001"
+	logServiceRPC    = "RPCServer.LogInfo"
 )
 
 func (app *App) Broker(w http.ResponseWriter, r *http.Request) {
@@ -61,11 +64,21 @@ func (app *App) HandleSubmission(w http.ResponseWriter, r *http.Request) {
 	case "auth":
 		app.authenticate(w, payload.Auth)
 	case "log":
-		app.logItem(w, payload.Log)
+		//app.logItem(w, payload.Log)
+		app.logItemRPC(w, payload.Log)
 	default:
 		common.ErrorJSON(w, errors.New("unknown action"))
 	}
 
+}
+
+func sendResponse(w http.ResponseWriter, err bool, msg string, data any) {
+	payload := jsonResponse{
+		Error:   err,
+		Message: msg,
+		Data:    data,
+	}
+	common.WriteJSON(w, http.StatusAccepted, payload)
 }
 
 func (app *App) authenticate(w http.ResponseWriter, auth AuthPayload) {
@@ -111,21 +124,21 @@ func (app *App) authenticate(w http.ResponseWriter, auth AuthPayload) {
 	}
 
 	// send message to the log service
-	err = app.logRequest("authentication", fmt.Sprintf("%s successfully logged in", auth.Email))
+	_, err = app.logRequestRPC("authentication", fmt.Sprintf("%s successfully logged in", auth.Email))
 	if err != nil {
 		fmt.Printf("Error logging auth status:%v\n", err)
 	}
+
 	sendResponse(w, false, "Authenticated", jsonFromService.Data)
 }
 
+// not used. remove shortly
 func (app *App) logItem(w http.ResponseWriter, entry LogPayload) {
 	jsonData, err := json.Marshal(entry)
 	if err != nil {
-		common.ErrorJSON(w, err) //wrap it?
+		common.ErrorJSON(w, err)
 		return
 	}
-
-	log.Printf("log item: %v", entry)
 
 	request, err := http.NewRequest("POST", logServiceURL, bytes.NewBuffer(jsonData))
 	if err != nil {
@@ -153,34 +166,35 @@ func (app *App) logItem(w http.ResponseWriter, entry LogPayload) {
 	sendResponse(w, false, "logged", nil)
 }
 
-func sendResponse(w http.ResponseWriter, err bool, msg string, data any) {
-	payload := jsonResponse{
-		Error:   err,
-		Message: msg,
-		Data:    data,
-	}
-	common.WriteJSON(w, http.StatusAccepted, payload)
+type RPCPayload struct {
+	Name string
+	Data string
 }
 
-func (app *App) logRequest(name, data string) error {
-	payload := LogPayload{Name: name, Data: data}
-	log.Printf("logRequest: %s %s", name, data)
-
-	// uses http for now: replace with
-	jsonData, err := json.Marshal(payload)
+func (app *App) logItemRPC(w http.ResponseWriter, entry LogPayload) {
+	result, err := app.logRequestRPC(entry.Name, entry.Data)
 	if err != nil {
-		return err
+		common.ErrorJSON(w, err)
 	}
 
-	request, err := http.NewRequest("POST", logServiceURL, bytes.NewBuffer(jsonData))
+	sendResponse(w, false, result, nil)
+}
+
+func (app *App) logRequestRPC(name, data string) (string, error) {
+	client, err := rpc.Dial("tcp", logServiceRPCURL)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	client := &http.Client{}
-	_, err = client.Do(request)
-	if err != nil {
-		return err
+	rpcPayload := RPCPayload{
+		Name: name,
+		Data: data,
 	}
-	return nil
+
+	var result string
+	if err = client.Call(logServiceRPC, rpcPayload, &result); err != nil {
+		return "", err
+	}
+
+	return result, nil
 }
