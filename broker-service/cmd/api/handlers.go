@@ -1,14 +1,20 @@
 package main
 
 import (
+	pb "auth-service/protos"
 	"bytes"
 	common "common/json-utils"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"net/rpc"
+	"time"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 type jsonResponse struct {
@@ -62,7 +68,9 @@ func (app *App) HandleSubmission(w http.ResponseWriter, r *http.Request) {
 	}
 	switch payload.Action {
 	case "auth":
-		app.authenticate(w, payload.Auth)
+		//app.authenticate(w, payload.Auth)
+		app.authenticateViaGRPC(w, payload.Auth)
+
 	case "log":
 		//app.logItem(w, payload.Log)
 		app.logItemRPC(w, payload.Log)
@@ -197,4 +205,34 @@ func (app *App) logRequestRPC(name, data string) (string, error) {
 	}
 
 	return result, nil
+}
+
+func (app *App) authenticateViaGRPC(w http.ResponseWriter, auth AuthPayload) {
+	conn, err := grpc.Dial("auth-service:50001", grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
+	if err != nil {
+		common.ErrorJSON(w, err)
+		return
+	}
+	defer conn.Close()
+
+	c := pb.NewAuthServiceClient(conn)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	authResponse, err := c.Authenticate(ctx, &pb.AuthRequest{Email: auth.Email, Password: auth.Password})
+	if err != nil {
+		common.ErrorJSON(w, err)
+		return
+	}
+
+	if authResponse.GetResult() == "Authenticated" {
+		// send message to the log service
+		_, err = app.logRequestRPC("authentication", fmt.Sprintf("%s successfully logged in", auth.Email))
+		if err != nil {
+			fmt.Printf("Error logging auth status:%v\n", err)
+		}
+	}
+	// what about failures?
+
+	sendResponse(w, false, authResponse.GetResult(), nil)
 }

@@ -20,6 +20,13 @@ import (
 // go get github.com/jackc/pgconn
 // go get github.com/jackc/pgx/v4
 
+// adding grpc:
+// go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.27
+// go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@1.2
+
+// protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative auth.proto
+// go get google.golang.org/grpc
+
 // how to access postgres in the container:
 // docker exec -it project_postgres_1 psql -U postgres
 
@@ -42,6 +49,9 @@ func main() {
 		DB:       conn,
 		UserRepo: data.NewPostgresUserRepo(conn),
 	}
+
+	// start the gRPC server
+	go app.gRPCListen()
 
 	fmt.Printf("Listening on port %s\n", webPort)
 
