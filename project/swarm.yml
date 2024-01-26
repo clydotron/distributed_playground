@@ -1,0 +1,8 @@
+version: "3"
+
+services:
+  broker-service:
+    image: clydotron/broker-service:0.0.2
+    deploy:
+      mode: replicated
+      replicas: 1
