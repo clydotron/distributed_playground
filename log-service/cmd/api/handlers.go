@@ -2,12 +2,12 @@ package main
 
 import (
 	common "common/json-utils"
-	"fmt"
 	"log"
-	"log-service/data"
+	"log-service/models"
 	"net/http"
 )
 
+// TODO figure out better place to put these
 type jsonPayload struct {
 	Name string `json:"name"`
 	Data string `json:"data"`
@@ -21,14 +21,12 @@ func (app *App) WriteLog(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	event := data.LogEntry{
+	event := models.LogEntry{
 		Name: payload.Name,
 		Data: payload.Data,
 	}
 
-	log.Println("WriteLog:", event.Name, event.Data)
-	if err := app.dataStore.LogRepo.Insert(event); err != nil {
-		fmt.Println("ERROR! >>", err)
+	if err := app.DataStore.LogRepo.Insert(event); err != nil {
 		common.ErrorJSON(w, err)
 		return
 	}

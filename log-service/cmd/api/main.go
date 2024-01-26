@@ -4,18 +4,24 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"log-service/data"
+	"os"
+
 	"net/http"
 	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+
+	"log-service/dao"
 )
 
 // external dependencies:
 // go get github.com/go-chi/chi/v5
 // go get github.com/go-chi/cors
 // go get go.mongodb.org/mongo-driver/mongo
+
+// adding ginkgo
+// go get github.com/onsi/ginkgo/v2/ginkgo
 
 const (
 	webPort  = "80"
@@ -28,7 +34,7 @@ const (
 var client *mongo.Client
 
 type App struct {
-	dataStore data.DataStore
+	DataStore dao.DataStore
 }
 
 func main() {
@@ -51,7 +57,7 @@ func main() {
 	}()
 
 	app := App{
-		dataStore: data.NewDataStore(mongoClient),
+		DataStore: dao.NewDataStore(mongoClient),
 	}
 
 	// TODO move into go function
@@ -83,12 +89,18 @@ func (app *App) serve() {
 	}
 }
 
-// TODO remove hardcoded values
+func getenv(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return fallback
+}
+
 func connectToMongo() (*mongo.Client, error) {
 	clientOptions := options.Client().ApplyURI(mongoURL)
 	clientOptions.SetAuth(options.Credential{
-		Username: "admin",
-		Password: "password",
+		Username: getenv("mongo_user", "admin"),
+		Password: getenv("mongo_password", "password"),
 	})
 
 	c, err := mongo.Connect(context.TODO(), clientOptions)
