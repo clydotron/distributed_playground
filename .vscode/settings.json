@@ -1,5 +1,0 @@
-{
-    "editor.formatOnSave": true,
-    "editor.defaultFormatter": "golang.go",
-    "editor.formatOnPaste": true
-}
