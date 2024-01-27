@@ -48,6 +48,7 @@ const (
 )
 
 func (app *App) Broker(w http.ResponseWriter, r *http.Request) {
+	log.Println("Hit the broker route.")
 	payload := jsonResponse{
 		Error:   false,
 		Message: "hit the broker",
@@ -61,11 +62,13 @@ func (app *App) Broker(w http.ResponseWriter, r *http.Request) {
 
 func (app *App) HandleSubmission(w http.ResponseWriter, r *http.Request) {
 	var payload requestPayload
-
+	log.Println("HandleSubmission >>>>")
 	if err := common.ReadJSON(w, r, &payload); err != nil {
 		common.ErrorJSON(w, err)
 		return
 	}
+
+	log.Println("HandleSubmission: ", payload.Action)
 	switch payload.Action {
 	case "auth":
 		//app.authenticate(w, payload.Auth)

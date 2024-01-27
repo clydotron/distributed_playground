@@ -2,7 +2,48 @@ version: "3"
 
 services:
   broker-service:
-    image: clydotron/broker-service:0.0.2
+    image: clydotron/broker-service:1.1.2
+    ports:
+      - "8080:8080"
     deploy:
       mode: replicated
       replicas: 1
+
+  log-service:
+    image: clydotron/log-service:1.1.0
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  auth-service:
+    image: clydotron/auth-service:1.1.0
+    deploy:
+      mode: replicated
+      replicas: 1
+    environment:
+      DSN: "host=postgres port=5432 user=postgres password=password dbname=users sslmode=disable timezone=UTC connect_timeout=5"
+
+  mongo:
+    image: mongo:4.2.17-bionic
+    ports:
+      - "27017:27017"
+    deploy:
+      mode: global
+    env_file:
+      - .env
+    volumes:
+      - ./db-data/mongo/:/data/db
+
+  postgres:
+    image: "postgres:14.2"
+    ports:
+      - "5432:5432"
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - ./db-data/postgres/:/var/lib/postgresql/data
+    
+
+      
+      

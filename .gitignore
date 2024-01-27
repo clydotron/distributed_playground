@@ -20,6 +20,17 @@ vendor/
 # Go workspace file
 # go.work
 
+# if you added a file(s) that need to be removed, update this file, 
+# commit the change, then run 'git rm -r --cached .' to clean things up
+# followed by:
+# 'git add .'
+# git commit -m "files removed from .gitignore'
+
+front-end/frontApp
+auth-service/authService
+log-service/logService
+broker-service/brokerService
+
 project/db-data/
 
 project/.env
