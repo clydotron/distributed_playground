@@ -27,6 +27,9 @@ vendor/
 # git commit -m "files removed from .gitignore'
 
 front-end/frontApp
+broker-service/brokerService
+auth-service/authService
+log-service/logService
 
 project/db-data/
 
