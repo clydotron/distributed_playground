@@ -1,0 +1,41 @@
+package main_test
+
+import (
+	"bytes"
+	"net/http/httptest"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+
+	. "log-service/cmd/api"
+)
+
+var _ = Describe("Routes", func() {
+
+	var logger App
+
+	BeforeEach(func() {
+		logger = App{}
+
+	})
+	// we have 1 route: /log
+	// will require mocking the datastore
+	Context("weeee!", func() {
+		var (
+			res  *httptest.ResponseRecorder
+			body bytes.Buffer
+		)
+		BeforeEach(func() {
+			JustBeforeEach(func() {
+				// res = httptest.NewRecorder()
+
+				// req := httptest.NewRequest("POST", "/log", &body)
+				// handler := http.HandlerFunc(logger.routes)
+				// handler.ServeHTTP(res, req)
+			})
+		})
+		It("something goes here", func() {
+
+		})
+	})
+})

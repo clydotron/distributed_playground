@@ -1,0 +1,10 @@
+go 1.21.3
+
+use (
+	./auth-service
+	./broker-service
+	./common
+	./front-end
+	./log-service
+	./other
+)
