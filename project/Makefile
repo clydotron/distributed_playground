@@ -2,6 +2,7 @@ FRONT_END_BINARY=frontApp
 BROKER_BINARY=brokerService
 AUTH_BINARY=authService
 LOG_BINARY=logService
+FRONT_END_LINUX_BINARY=frontEndApp
 
 ## up: starts all containers in the background without forcing build
 up:
@@ -50,6 +51,12 @@ build_logger:
 build_front:
 	@echo "Building front end binary..."
 	cd ../front-end && env CGO_ENABLED=0 go build -o ${FRONT_END_BINARY} ./cmd/web
+	@echo "Done!"
+
+## build_front_linux: builds the frone end binary
+build_front_linux:
+	@echo "Building front end linux binary..."
+	cd ../front-end && env GOOS=linux CGO_ENABLED=0 go build -o ${FRONT_END_LINUX_BINARY} ./cmd/web
 	@echo "Done!"
 
 ## start: starts the front end
