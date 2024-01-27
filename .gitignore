@@ -26,6 +26,7 @@ vendor/
 # 'git add .'
 # git commit -m "files removed from .gitignore'
 
+front-end/frontApp
 
 project/db-data/
 
